@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Steam - Biblioteca</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <header class="header">
+        <div class="logo">
+            <img src="logo.png" alt="Logo de Steam">
+        </div>
+        <nav class="nav">
+            <ul>
+                <li><a href="../index.html">Tienda</a></li>
+                <li><a href="biblioteca.html" class="active">Biblioteca</a></li>
+                <li><a href="#">Comunidad</a></li>
+                <li><a href="#">Perfil</a></li>
+            </ul>
+        </nav>
+        <div class="search-bar">
+            <input type="text" id="searchLibrary" placeholder="Buscar en tu biblioteca...">
+            <button><i class="fas fa-search"></i></button>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <section class="library-header">
+            <h1>Tu Biblioteca</h1>
+            <div class="library-filters">
+                <label for="filterSelect">Filtrar por:</label>
+                <select id="filterSelect">
+                    <option value="all">Todos los juegos</option>
+                    <option value="installed">Instalados</option>
+                    <option value="favorites">Favoritos</option>
+                    <option value="recent">Recientes</option>
+                </select>
+            </div>
+        </section>
+
+        <section class="game-library" id="gameLibrary">
+            <!-- Aquí se cargarán los juegos comprados -->
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section about">
+                <h3>Acerca de SteamClone</h3>
+                <p>SteamClone es una réplica inspirada en la plataforma Steam para la demostración de diseño web y funcionalidades interactivas.</p>
+            </div>
+            <div class="footer-section links">
+                <h3>Enlaces Rápidos</h3>
+                <ul>
+                    <li><a href="index.html">Tienda</a></li>
+                    <li><a href="biblioteca.html">Biblioteca</a></li>
+                    <li><a href="#">Comunidad</a></li>
+                    <li><a href="#">Perfil</a></li>
+                </ul>
+            </div>
+            <div class="footer-section social">
+                <h3>Síguenos</h3>
+                <ul>
+                    <li><a href="#"><i class="fab fa-facebook-f"></i> Facebook</a></li>
+                    <li><a href="#"><i class="fab fa-twitter"></i> Twitter</a></li>
+                    <li><a href="#"><i class="fab fa-instagram"></i> Instagram</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2024 SteamClone. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <!-- Modal para ver más detalles de los juegos -->
+    <div id="gameDetailsModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeGameModal()">&times;</span>
+            <h2 id="modalGameTitle">Título del Juego</h2>
+            <img id="modalGameImage" src="" alt="Imagen del Juego">
+            <p id="modalGameDescription">Descripción extendida del juego...</p>
+            <p id="modalGamePrice">Precio: $00.00</p>
+            <p id="modalGameRating">Calificación: ★★★★☆</p>
+            <div id="modalGameReviews">
+                <h3>Reseñas:</h3>
+                <p id="review1">Reseña 1...</p>
+                <p id="review2">Reseña 2...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Cargar juegos comprados desde localStorage y mostrarlos en la biblioteca
+        document.addEventListener('DOMContentLoaded', function() {
+            const gameLibrary = document.getElementById('gameLibrary');
+            const filterSelect = document.getElementById('filterSelect');
+            let juegosComprados = JSON.parse(localStorage.getItem('juegosComprados')) || [];
+
+            function renderLibrary(filteredGames) {
+                gameLibrary.innerHTML = '';
+                filteredGames.forEach((juego, index) => {
+                    const gameItem = document.createElement('div');
+                    gameItem.className = 'game-item';
+                    gameItem.innerHTML = `
+                        <img src="${juego.imagen}" alt="${juego.nombre}">
+                        <h3>${juego.nombre}</h3>
+                        <p>Horas jugadas: ${juego.horasJugadas}</p>
+                        <button class="btn-secondary" onclick="verMasDetalles(${index})">Ver Más</button>
+                        <button class="btn-danger" onclick="eliminarJuego(${index})">Eliminar</button>
+                    `;
+                    gameLibrary.appendChild(gameItem);
+                });
+            }
+
+            // Filtrar los juegos según la selección
+            filterSelect.addEventListener('change', function() {
+                const filter = filterSelect.value;
+                let filteredGames;
+
+                switch(filter) {
+                    case 'installed':
+                        filteredGames = juegosComprados.filter(juego => juego.installed === 'yes');
+                        break;
+                    case 'favorites':
+                        filteredGames = juegosComprados.filter(juego => juego.favorite === 'yes');
+                        break;
+                    case 'recent':
+                        filteredGames = juegosComprados.filter(juego => juego.recent === 'yes');
+                        break;
+                    default:
+                        filteredGames = juegosComprados;
+                        break;
+                }
+
+                renderLibrary(filteredGames);
+            });
+
+            // Función para eliminar un juego de la biblioteca
+            window.eliminarJuego = function(index) {
+                if (confirm('¿Estás seguro de que deseas eliminar este juego de tu biblioteca?')) {
+                    juegosComprados.splice(index, 1);  // Eliminar el juego de la lista
+                    localStorage.setItem('juegosComprados', JSON.stringify(juegosComprados));  // Actualizar localStorage
+                    renderLibrary(juegosComprados);  // Volver a renderizar la biblioteca
+                }
+            }
+
+            // Función para ver más detalles del juego
+            window.verMasDetalles = function(index) {
+                const juego = juegosComprados[index];
+                document.getElementById('modalGameTitle').textContent = juego.nombre;
+                document.getElementById('modalGameImage').src = juego.imagen;
+                document.getElementById('modalGameDescription').textContent = `Descripción extendida de ${juego.nombre}.`;
+                document.getElementById('modalGamePrice').textContent = `Precio: $${juego.precio}`;
+                document.getElementById('modalGameRating').textContent = 'Calificación: ★★★★☆';
+                document.getElementById('review1').textContent = 'Esta es una reseña ficticia del juego 1...';
+                document.getElementById('review2').textContent = 'Esta es otra reseña ficticia del juego 2...';
+
+                // Mostrar el modal
+                document.getElementById('gameDetailsModal').style.display = 'block';
+            }
+
+            // Función para cerrar el modal
+            window.closeGameModal = function() {
+                document.getElementById('gameDetailsModal').style.display = 'none';
+            }
+
+            // Renderizar la biblioteca por defecto (todos los juegos)
+            renderLibrary(juegosComprados);
+        });
+    </script>
+    <script src="./script.js"></script>
+</body>
+</html>
